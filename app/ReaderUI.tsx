@@ -79,11 +79,6 @@ export default function ReaderUI({ articles }: { articles: any[] }) {
           Built by Hemanth
         </a>
       </div>
-
-
-      </div>
-
-      {/* PANE 2: Article List */}
       <div className="w-80 bg-gray-50 border-r border-gray-200 flex flex-col shrink-0">
         <div className="p-4 bg-gray-100 border-b border-gray-200 font-bold text-sm text-gray-600 uppercase tracking-wider sticky top-0">
           {selectedFeedId === 'all' ? 'Latest Feed' : FEEDS.find(f => f.id === selectedFeedId)?.name}
@@ -111,13 +106,11 @@ export default function ReaderUI({ articles }: { articles: any[] }) {
         {selectedArticle ? (
           <div className="grow overflow-y-auto p-10 bg-white">
             
-            {/* 🚀 IF IT IS HACKER NEWS: Render the Native Thread */}
             {selectedArticle.hnItemId ? (
               <HNErrorBoundary>
     <HNThread article={selectedArticle} />
   </HNErrorBoundary>
             ) : (
-              // 📝 IF IT IS SUBSTACK / REDDIT: Render the standard article
               <>
               
                 <h1 className="text-3xl font-extrabold leading-tight text-gray-900 max-w-3xl mx-auto mb-10 pb-6 border-b">
@@ -141,11 +134,6 @@ export default function ReaderUI({ articles }: { articles: any[] }) {
     </div>
   );
 }
-
-/* =====================================================================
-   NATIVE HACKER NEWS COMPONENTS
-   These components fetch the Algolia API to render exact HN comments
-===================================================================== */
 
 function HNThread({ article }: { article: any }) {
   const [data, setData] = useState<any>(null);
