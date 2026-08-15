@@ -13,7 +13,13 @@ const parser = new Parser({
 export const FEEDS = [
   { id: 'latent-space', name: 'Latent Space', group: 'Newsletters', url: 'https://www.latent.space/feed' },
   { id: 'hn-best', name: 'HN (Top 100+)', group: 'Aggregators', url: 'https://hnrss.org/frontpage?points=100' },
-  { id: 'hn-front', name: 'HN (Front Page)', group: 'Aggregators', url: 'https://hnrss.org/frontpage' },
+  { id: 'hn-frontpage', name: 'HN Front Page', group: 'Aggregators', url: 'https://hnrss.org/frontpage' },
+  { id: 'hn-best', name: 'HN Best (few days)', group: 'Aggregators', url: 'https://hnrss.org/best' },
+  { id: 'hn-bestcomments', name: 'HN Best Comments', group: 'Aggregators', url: 'https://hnrss.org/bestcomments' },
+  { id: 'hn-ai-topic', name: 'HN: AI/Infra', group: 'Aggregators', url: 'https://hnrss.org/newest?q=LLM+OR+agents+OR+RAG+OR+inference&points=40' },
+  { id: 'hn-front', name: 'HN official(Front)', group: 'Aggregators', url: 'https://hnrss.org/frontpage' },
+  { id: 'hn-top-notch', name: 'HN top notch', group: 'Aggregators', url: 'https://hnrss.org/best?points=300&comments=50' },
+ { id: 'hn-founder', name: 'HN curious founder', group: 'Aggregators', url: 'https://hnrss.org/show?points=150' },
   { id: 'reddit-ml', name: 'r/MachineLearning', group: 'Reddit', url: 'https://www.reddit.com/r/MachineLearning/.rss' },
   { id: 'reddit-localllama', name: 'r/LocalLLaMA', group: 'Reddit', url: 'https://www.reddit.com/r/LocalLLaMA/.rss' },
 ];
