@@ -12,33 +12,37 @@ const parser = new Parser({
 
 export const FEEDS = [
   { id: 'latent-space', name: 'Latent Space', group: 'Newsletters', url: 'https://www.latent.space/feed' },
-  { id: 'hn-best', name: 'HN (Top 100+)', group: 'Aggregators', url: 'https://hnrss.org/frontpage?points=100' },
+  { id: 'hn-toppoints', name: 'HN (Top 100+)', group: 'Aggregators', url: 'https://hnrss.org/frontpage?points=100' },
   { id: 'hn-frontpage', name: 'HN Front Page', group: 'Aggregators', url: 'https://hnrss.org/frontpage' },
   { id: 'hn-best', name: 'HN Best (few days)', group: 'Aggregators', url: 'https://hnrss.org/best' },
   { id: 'hn-bestcomments', name: 'HN Best Comments', group: 'Aggregators', url: 'https://hnrss.org/bestcomments' },
   { id: 'hn-ai-topic', name: 'HN: AI/Infra', group: 'Aggregators', url: 'https://hnrss.org/newest?q=LLM+OR+agents+OR+RAG+OR+inference&points=40' },
-  { id: 'hn-front', name: 'HN official(Front)', group: 'Aggregators', url: 'https://hnrss.org/frontpage' },
+  { id: 'hn-front-alt', name: 'HN official(Front)', group: 'Aggregators', url: 'https://hnrss.org/frontpage' },
   { id: 'hn-top-notch', name: 'HN top notch', group: 'Aggregators', url: 'https://hnrss.org/best?points=300&comments=50' },
- { id: 'hn-founder', name: 'HN curious founder', group: 'Aggregators', url: 'https://hnrss.org/show?points=150' },
+  { id: 'hn-founder', name: 'HN curious founder', group: 'Aggregators', url: 'https://hnrss.org/show?points=150' },
   { id: 'reddit-ml', name: 'r/MachineLearning', group: 'Reddit', url: 'https://www.reddit.com/r/MachineLearning/.rss' },
   { id: 'reddit-localllama', name: 'r/LocalLLaMA', group: 'Reddit', url: 'https://www.reddit.com/r/LocalLLaMA/.rss' },
 ];
 
 export async function getAllFeeds() {
   const allItems: any[] = [];
-  
+  const seenIds = new Set<string>();
+
   for (const feed of FEEDS) {
     try {
-       if (feed.group === 'Reddit') {
-        await new Promise(r => setTimeout(r, 6000)); // small gap before hitting Reddit
+      if (feed.group === 'Reddit') {
+        await new Promise(r => setTimeout(r, 6000));
       }
       const parsed = await parser.parseURL(feed.url);
-      
+
       parsed.items.forEach(item => {
+        const id = item.link || item.guid;
+        if (!id || seenIds.has(id)) return; // skip duplicates across overlapping feeds
+        seenIds.add(id);
+
         const rawContent = item['content:encoded'] || item.content || item.description || "";
         const hasFullText = !!item['content:encoded'] || rawContent.length > 800;
 
-        // 👇 Grab the exact Hacker News Post ID
         let hnItemId = null;
         if (feed.group === 'Aggregators') {
           const sources = [item.guid, item.link, (item as any).comments].filter(Boolean);
@@ -49,8 +53,8 @@ export async function getAllFeeds() {
         }
 
         allItems.push({
-          id: item.link || item.guid,
-          feedId: feed.id, // This is what fixes the filter bug!
+          id,
+          feedId: feed.id,
           feedName: feed.name,
           group: feed.group,
           title: item.title,
@@ -59,7 +63,7 @@ export async function getAllFeeds() {
           content: rawContent,
           snippet: item.contentSnippet ? item.contentSnippet.substring(0, 100) + '...' : "Click to view details...",
           hasFullText: hasFullText,
-          hnItemId: hnItemId // We send this to the UI
+          hnItemId: hnItemId
         });
       });
     } catch (e) {
