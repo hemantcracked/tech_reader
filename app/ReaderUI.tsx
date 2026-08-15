@@ -1,8 +1,24 @@
 'use client';
 
+import { Component, ReactNode } from 'react';
 import { useState, useEffect } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { FEEDS } from '@/lib/feedFetcher';
+
+class HNErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() { return { hasError: true }; }
+  componentDidCatch(error: any) { console.error('HN thread render error:', error); }
+  render() {
+    if (this.state.hasError) {
+      return <div className="p-8 text-red-500">Couldn't render this HN thread.</div>;
+    }
+    return this.props.children;
+  }
+}
 
 export default function ReaderUI({ articles }: { articles: any[] }) {
   const [selectedFeedId, setSelectedFeedId] = useState<string>('all');
@@ -87,10 +103,13 @@ export default function ReaderUI({ articles }: { articles: any[] }) {
             
             {/* 🚀 IF IT IS HACKER NEWS: Render the Native Thread */}
             {selectedArticle.hnItemId ? (
-              <HNThread article={selectedArticle} />
+              <HNErrorBoundary>
+    <HNThread article={selectedArticle} />
+  </HNErrorBoundary>
             ) : (
               // 📝 IF IT IS SUBSTACK / REDDIT: Render the standard article
               <>
+              
                 <h1 className="text-3xl font-extrabold leading-tight text-gray-900 max-w-3xl mx-auto mb-10 pb-6 border-b">
                   {selectedArticle.title}
                 </h1>
@@ -161,15 +180,15 @@ function HNThread({ article }: { article: any }) {
        {/* HN Comments Section */}
        <h3 className="text-xl font-bold mb-6 border-b pb-4 text-gray-800">Discussion Thread</h3>
        <div className="space-y-6">
-         {data.children?.map((comment: any) => <HNComment key={comment.id} comment={comment} />)}
-       </div>
+  {data.children?.filter(Boolean).map((comment: any) => <HNComment key={comment.id} comment={comment} />)}
+</div>
     </div>
   )
 }
 
 function HNComment({ comment }: { comment: any }) {
-  if (!comment.text) return null; // Skip deleted comments
-  
+  if (!comment || !comment.text) return null;
+
   return (
     <div className="mb-4 pl-4 border-l-2 border-gray-200 hover:border-orange-300 transition-colors">
        <div className="text-xs font-bold text-gray-500 mb-1 bg-gray-50 inline-block px-2 py-1 rounded">
@@ -177,11 +196,10 @@ function HNComment({ comment }: { comment: any }) {
        </div>
        <div className="prose prose-sm max-w-none text-gray-800 prose-a:text-blue-600 prose-p:leading-snug prose-pre:bg-gray-100 prose-pre:text-gray-800"
             dangerouslySetInnerHTML={{ __html: comment.text }} />
-            
-       {/* Recursively render child comments! */}
-       {comment.children && comment.children.length > 0 && (
+
+       {comment.children && comment.children.filter(Boolean).length > 0 && (
          <div className="mt-4 space-y-4">
-           {comment.children.map((child: any) => <HNComment key={child.id} comment={child} />)}
+           {comment.children.filter(Boolean).map((child: any) => <HNComment key={child.id} comment={child} />)}
          </div>
        )}
     </div>
