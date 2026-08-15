@@ -23,6 +23,8 @@ class HNErrorBoundary extends Component<{ children: ReactNode }, { hasError: boo
 export default function ReaderUI({ articles }: { articles: any[] }) {
   const [selectedFeedId, setSelectedFeedId] = useState<string>('all');
   const [selectedArticle, setSelectedArticle] = useState<any>(articles[0]);
+  // Controls which single pane shows on mobile: 'sources' | 'list' | 'reading'
+  const [mobileView, setMobileView] = useState<'sources' | 'list' | 'reading'>('list');
 
   if (!articles || articles.length === 0) return <div>No articles found.</div>;
 
@@ -35,14 +37,14 @@ export default function ReaderUI({ articles }: { articles: any[] }) {
     <div className="flex h-screen bg-white text-black overflow-hidden font-sans">
       
       {/* PANE 1: Sources Sidebar */}
-      <div className="w-64 bg-gray-900 text-gray-300 flex flex-col border-r border-gray-800 shrink-0">
+      <div className={`${mobileView === 'sources' ? 'flex' : 'hidden'} md:flex w-full md:w-64 bg-gray-900 text-gray-300 flex-col border-r border-gray-800 shrink-0`}>
         <div className="p-4 font-extrabold text-xl text-white tracking-wide border-b border-gray-800">
-  Hemanth's Reader
-</div>
+          Hemanth's Reader
+        </div>
         <div className="overflow-y-auto flex-grow p-4 space-y-6">
           <div>
             <button
-              onClick={() => { setSelectedFeedId('all'); setSelectedArticle(articles[0]); }}
+              onClick={() => { setSelectedFeedId('all'); setSelectedArticle(articles[0]); setMobileView('list'); }}
               className={`w-full text-left px-3 py-2 rounded-md font-semibold transition-colors ${selectedFeedId === 'all' ? 'bg-blue-600 text-white' : 'hover:bg-gray-800'}`}
             >
               All Articles
@@ -61,6 +63,7 @@ export default function ReaderUI({ articles }: { articles: any[] }) {
                       // Auto-select the first article in this specific feed
                       const firstArt = articles.find(a => a.feedId === feed.id);
                       setSelectedArticle(firstArt);
+                      setMobileView('list');
                     }}
                     className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${selectedFeedId === feed.id ? 'bg-gray-700 text-white' : 'hover:bg-gray-800 text-gray-400'}`}
                   >
@@ -71,7 +74,7 @@ export default function ReaderUI({ articles }: { articles: any[] }) {
             </div>
           ))}
         </div>
-         <a href="https://hemanthpulicharla.pythonanywhere.com/blogposts/35"
+        <a href="https://hemanthpulicharla.pythonanywhere.com/blogposts/35"
           target="_blank"
           rel="noreferrer"
           className="p-3 text-xs text-gray-500 hover:text-gray-300 border-t border-gray-800 text-center transition-colors"
@@ -79,8 +82,11 @@ export default function ReaderUI({ articles }: { articles: any[] }) {
           Built by Hemanth
         </a>
       </div>
-      <div className="w-80 bg-gray-50 border-r border-gray-200 flex flex-col shrink-0">
-        <div className="p-4 bg-gray-100 border-b border-gray-200 font-bold text-sm text-gray-600 uppercase tracking-wider sticky top-0">
+
+      {/* PANE 2: Article List */}
+      <div className={`${mobileView === 'list' ? 'flex' : 'hidden'} md:flex w-full md:w-80 bg-gray-50 border-r border-gray-200 flex-col shrink-0`}>
+        <div className="p-4 bg-gray-100 border-b border-gray-200 font-bold text-sm text-gray-600 uppercase tracking-wider sticky top-0 flex items-center gap-2">
+          <button onClick={() => setMobileView('sources')} className="md:hidden text-blue-600">←</button>
           {selectedFeedId === 'all' ? 'Latest Feed' : FEEDS.find(f => f.id === selectedFeedId)?.name}
         </div>
         <div className="overflow-y-auto flex-grow">
@@ -88,7 +94,7 @@ export default function ReaderUI({ articles }: { articles: any[] }) {
           {displayedArticles.map((article) => (
             <button
               key={article.id}
-              onClick={() => setSelectedArticle(article)}
+              onClick={() => { setSelectedArticle(article); setMobileView('reading'); }}
               className={`w-full text-left p-4 border-b border-gray-200 hover:bg-white transition-colors ${selectedArticle?.id === article.id ? 'bg-white border-l-4 border-blue-500 shadow-sm relative z-10' : 'border-l-4 border-transparent'}`}
             >
               {article.pubDate && <RelativeTime date={article.pubDate} />}
@@ -102,17 +108,19 @@ export default function ReaderUI({ articles }: { articles: any[] }) {
       </div>
 
       {/* PANE 3: Reading Area */}
-      <div className="flex-1 bg-white flex flex-col h-screen overflow-hidden">
+      <div className={`${mobileView === 'reading' ? 'flex' : 'hidden'} md:flex flex-1 bg-white flex-col h-screen overflow-hidden`}>
         {selectedArticle ? (
           <div className="grow overflow-y-auto p-10 bg-white">
-            
+            <button onClick={() => setMobileView('list')} className="md:hidden mb-4 text-blue-600 font-medium">← Back to list</button>
+
+            {/* 🚀 IF IT IS HACKER NEWS: Render the Native Thread */}
             {selectedArticle.hnItemId ? (
               <HNErrorBoundary>
-    <HNThread article={selectedArticle} />
-  </HNErrorBoundary>
+                <HNThread article={selectedArticle} />
+              </HNErrorBoundary>
             ) : (
+              // 📝 IF IT IS SUBSTACK / REDDIT: Render the standard article
               <>
-              
                 <h1 className="text-3xl font-extrabold leading-tight text-gray-900 max-w-3xl mx-auto mb-10 pb-6 border-b">
                   {selectedArticle.title}
                 </h1>
@@ -134,6 +142,11 @@ export default function ReaderUI({ articles }: { articles: any[] }) {
     </div>
   );
 }
+
+/* =====================================================================
+   NATIVE HACKER NEWS COMPONENTS
+   These components fetch the Algolia API to render exact HN comments
+===================================================================== */
 
 function HNThread({ article }: { article: any }) {
   const [data, setData] = useState<any>(null);
@@ -178,8 +191,8 @@ function HNThread({ article }: { article: any }) {
        {/* HN Comments Section */}
        <h3 className="text-xl font-bold mb-6 border-b pb-4 text-gray-800">Discussion Thread</h3>
        <div className="space-y-6">
-  {data.children?.filter(Boolean).map((comment: any) => <HNComment key={comment.id} comment={comment} />)}
-</div>
+         {data.children?.filter(Boolean).map((comment: any) => <HNComment key={comment.id} comment={comment} />)}
+       </div>
     </div>
   )
 }
@@ -195,6 +208,7 @@ function HNComment({ comment }: { comment: any }) {
        <div className="prose prose-sm max-w-none text-gray-800 prose-a:text-blue-600 prose-p:leading-snug prose-pre:bg-gray-100 prose-pre:text-gray-800"
             dangerouslySetInnerHTML={{ __html: comment.text }} />
 
+       {/* Recursively render child comments! */}
        {comment.children && comment.children.filter(Boolean).length > 0 && (
          <div className="mt-4 space-y-4">
            {comment.children.filter(Boolean).map((child: any) => <HNComment key={child.id} comment={child} />)}
@@ -203,6 +217,7 @@ function HNComment({ comment }: { comment: any }) {
     </div>
   )
 }
+
 function RelativeTime({ date }: { date: string }) {
   const [text, setText] = useState('');
   useEffect(() => {
