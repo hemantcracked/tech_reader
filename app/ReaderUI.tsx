@@ -37,8 +37,8 @@ export default function ReaderUI({ articles }: { articles: any[] }) {
       {/* PANE 1: Sources Sidebar */}
       <div className="w-64 bg-gray-900 text-gray-300 flex flex-col border-r border-gray-800 shrink-0">
         <div className="p-4 font-extrabold text-xl text-white tracking-wide border-b border-gray-800">
-          My Reader
-        </div>
+  Hemanth's Reader
+</div>
         <div className="overflow-y-auto flex-grow p-4 space-y-6">
           <div>
             <button
@@ -71,6 +71,16 @@ export default function ReaderUI({ articles }: { articles: any[] }) {
             </div>
           ))}
         </div>
+         <a href="https://hemanthpulicharla.pythonanywhere.com/blogposts/35"
+          target="_blank"
+          rel="noreferrer"
+          className="p-3 text-xs text-gray-500 hover:text-gray-300 border-t border-gray-800 text-center transition-colors"
+        >
+          Built by Hemanth
+        </a>
+      </div>
+
+
       </div>
 
       {/* PANE 2: Article List */}
